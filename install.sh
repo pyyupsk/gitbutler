@@ -98,18 +98,22 @@ fetch_release_info() {
     JSON_DATA=$(curl -fsSL "$API_URL")
     [ -n "$JSON_DATA" ] || error "Failed to fetch release data from the API."
 
-    LATEST_VERSION=$(echo "$JSON_DATA" | jq -r '.version')
+    local RELEASE_DATA
+    RELEASE_DATA=$(echo "$JSON_DATA" | jq '.[0]')
+    [ -n "$RELEASE_DATA" ] && [ "$RELEASE_DATA" != "null" ] || error "Could not find release object in API response."
+
+    LATEST_VERSION=$(echo "$RELEASE_DATA" | jq -r '.version')
     [ -n "$LATEST_VERSION" ] && [ "$LATEST_VERSION" != "null" ] || error "Could not parse version from API response."
 
     local BUILD_INFO
     # Prioritize native packages (deb/rpm)
-    BUILD_INFO=$(echo "$JSON_DATA" | jq -r --arg arch "$ARCH_NAME" --arg pkg_type ".$PKG_TYPE" '.builds[] | select(.arch == $arch and (.file | endswith($pkg_type)))')
+    BUILD_INFO=$(echo "$RELEASE_DATA" | jq -r --arg arch "$ARCH_NAME" --arg pkg_type ".$PKG_TYPE" '.builds[] | select(.arch == $arch and (.file | endswith($pkg_type)))')
 
     # Fallback to AppImage if no native package is found for the detected distro
     if [ -z "$BUILD_INFO" ]; then
         info "No native package found for your distro, falling back to AppImage."
         PKG_TYPE="appimage"
-        BUILD_INFO=$(echo "$JSON_DATA" | jq -r --arg arch "$ARCH_NAME" '.builds[] | select(.arch == $arch and (.file | endswith(".AppImage")))')
+        BUILD_INFO=$(echo "$RELEASE_DATA" | jq -r --arg arch "$ARCH_NAME" '.builds[] | select(.arch == $arch and (.file | endswith(".AppImage")))')
     fi
 
     [ -n "$BUILD_INFO" ] || error "No compatible build found for architecture '$ARCH_NAME'."
