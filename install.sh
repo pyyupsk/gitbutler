@@ -51,7 +51,7 @@ trap cleanup EXIT
 check_dependencies() {
     info "Checking for required tools..."
     local missing_deps=0
-    for cmd in curl jq sha256sum sudo; do
+    for cmd in curl jq sha256sum sudo tar; do
         if ! command -v "$cmd" &>/dev/null; then
             echo -e "${RED}- Missing required command: $cmd${NC}" >&2
             missing_deps=1
@@ -109,13 +109,19 @@ fetch_release_info() {
     # Prioritize native packages (deb/rpm)
     BUILD_INFO=$(echo "$RELEASE_DATA" | jq -r --arg arch "$ARCH_NAME" --arg pkg_type ".$PKG_TYPE" '.builds[] | select(.arch == $arch and (.file | endswith($pkg_type)))')
 
-    # Fallback to AppImage if no native package is found for the detected distro
-    if [ -z "$BUILD_INFO" ]; then
-        info "No native package found for your distro, falling back to AppImage."
-        PKG_TYPE="appimage"
-        BUILD_INFO=$(echo "$RELEASE_DATA" | jq -r --arg arch "$ARCH_NAME" '.builds[] | select(.arch == $arch and (.file | endswith(".AppImage")))')
-    fi
-
+            # Fallback to AppImage if no native package is found for the detected distro
+            if [ -z "$BUILD_INFO" ]; then
+                info "No native package found for your distro, falling back to AppImage."
+                PKG_TYPE="appimage"
+                # First try to find a direct .AppImage
+                BUILD_INFO=$(echo "$RELEASE_DATA" | jq -r --arg arch "$ARCH_NAME" '.builds[] | select(.arch == $arch and (.file | endswith(".AppImage")))')
+    
+                if [ -z "$BUILD_INFO" ]; then
+                    # If no direct .AppImage, try to find a .AppImage.tar.gz
+                    info "No direct AppImage found, looking for AppImage.tar.gz."
+                    BUILD_INFO=$(echo "$RELEASE_DATA" | jq -r --arg arch "$ARCH_NAME" '.builds[] | select(.arch == $arch and (.file | endswith(".AppImage.tar.gz")))')
+                fi
+            fi
     [ -n "$BUILD_INFO" ] || error "No compatible build found for architecture '$ARCH_NAME'."
 
     DOWNLOAD_URL=$(echo "$BUILD_INFO" | jq -r '.url')
@@ -145,6 +151,19 @@ download_and_verify() {
 
     info "Downloading from $DOWNLOAD_URL"
     curl --fail --show-error -# -L -o "$DOWNLOAD_PATH" "$DOWNLOAD_URL" || error "Download failed."
+
+    # Handle .tar.gz archives for AppImages
+    if [[ "$DOWNLOAD_PATH" == *.AppImage.tar.gz ]]; then
+        info "Decompressing AppImage archive..."
+        tar -xzf "$DOWNLOAD_PATH" -C "$TMP_DIR" || error "Failed to decompress AppImage archive."
+        # The actual AppImage file should now be in $TMP_DIR
+        local extracted_appimage
+        # Search for .AppImage in the temp directory, allowing for one level of subdirectory
+        extracted_appimage=$(find "$TMP_DIR" -maxdepth 2 -type f -name "*.AppImage" | head -n 1)
+        [ -n "$extracted_appimage" ] || error "Could not find .AppImage file after extraction."
+        DOWNLOAD_PATH="$extracted_appimage" # Update DOWNLOAD_PATH to point to the extracted AppImage
+        FILENAME=$(basename "$DOWNLOAD_PATH") # Update FILENAME to reflect the extracted file
+    fi
 
     # SECURITY WARNING: The GitButler API does not provide a per-build checksum.
     # The script cannot verify the integrity of the downloaded file. This is a
