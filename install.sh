@@ -238,6 +238,21 @@ main() {
     if [ "$INSTALL_PATH" ]; then
         info "✅ Successfully installed GitButler version $FINAL_VERSION"
         info "   Path: $INSTALL_PATH"
+        echo ""
+        info "To enable shell completions and alias, add the following to your shell configuration:"
+        info "  Zsh:"
+        info "    echo 'alias but=\"gitbutler\"' >> ~/.zshrc"
+        info "    echo 'eval \"\$(gitbutler completions zsh)\"' >> ~/.zshrc"
+        info ""
+        info "  Bash:"
+        info "    echo 'alias but=\"gitbutler\"' >> ~/.bashrc"
+        info "    echo 'eval \"\$(gitbutler completions bash)\"' >> ~/.bashrc"
+        info ""
+        info "  Fish:"
+        info "    echo 'alias but=\"gitbutler\"' >> ~/.config/fish/config.fish"
+        info "    echo 'gitbutler completions fish | source' >> ~/.config/fish/config.fish"
+        echo ""
+        info "Then restart your shell or source the configuration file."
     else
         error "Installation finished, but the 'gitbutler' command could not be found in the system's PATH."
     fi
