@@ -14,7 +14,7 @@ A secure, robust installation script for the [GitButler CLI](https://gitbutler.c
 ## Quick Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pyyupsk/gitbutler/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/pyyupsk/gitbutler/main/scripts/install.sh | bash
 ```
 
 ## Requirements
