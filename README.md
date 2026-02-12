@@ -1,4 +1,4 @@
-# 🌊 GitButler CLI Installer
+# 🎩 GitButler CLI Installer
 
 A simple Bash script to **install**, **update**, or **uninstall** the **GitButler CLI** on Linux.
 
