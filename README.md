@@ -28,7 +28,7 @@ Make sure the following tools are installed before running the script:
 Install GitButler CLI:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pyyupsk/gitbutler/main/scripts/install.sh | bash
+curl -fsSL https://pyyupsk.github.io/gitbutler/install.sh | bash
 ```
 
 ### Advanced Options
@@ -36,25 +36,25 @@ curl -fsSL https://raw.githubusercontent.com/pyyupsk/gitbutler/main/scripts/inst
 Force installation without confirmation prompts:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pyyupsk/gitbutler/main/scripts/install.sh | bash -s -- --force
+curl -fsSL https://pyyupsk.github.io/gitbutler/install.sh | bash -s -- --force
 ```
 
 Quiet installation with minimal output:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pyyupsk/gitbutler/main/scripts/install.sh | bash -s -- --quiet
+curl -fsSL https://pyyupsk.github.io/gitbutler/install.sh | bash -s -- --quiet
 ```
 
 Combined force and quiet installation:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pyyupsk/gitbutler/main/scripts/install.sh | bash -s -- --force --quiet
+curl -fsSL https://pyyupsk.github.io/gitbutler/install.sh | bash -s -- --force --quiet
 ```
 
 View help information:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pyyupsk/gitbutler/main/scripts/install.sh | bash -s -- --help
+curl -fsSL https://pyyupsk.github.io/gitbutler/install.sh | bash -s -- --help
 ```
 
 ## 🔄 Installation Flow
@@ -125,13 +125,13 @@ For full documentation, visit: <https://docs.gitbutler.com/cli-overview>
 To completely remove GitButler CLI:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pyyupsk/gitbutler/main/scripts/install.sh | bash -s -- --uninstall
+curl -fsSL https://pyyupsk.github.io/gitbutler/install.sh | bash -s -- --uninstall
 ```
 
 Force uninstallation without confirmation:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/pyyupsk/gitbutler/main/scripts/install.sh | bash -s -- --uninstall --force
+curl -fsSL https://pyyupsk.github.io/gitbutler/install.sh | bash -s -- --uninstall --force
 ```
 
 This will remove:

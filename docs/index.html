@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="GitButler CLI Installer - A simple Bash script to install, update, or uninstall the GitButler CLI on Linux"
+    />
+    <title>GitButler CLI Installer</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="https://gitbutler.com/favicon/favicon.svg"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="64x64"
+      href="https://gitbutler.com/favicon/favicon-64.png"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --font-sans:
+          "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --font-mono: "Geist Mono", "Monaco", "Cascadia Code", monospace;
+        --color-gray-100: rgb(255, 255, 255);
+        --color-gray-95: rgb(249, 249, 248);
+        --color-gray-90: rgb(243, 242, 241);
+        --color-gray-80: rgb(231, 229, 228);
+        --color-gray-70: rgb(202, 198, 195);
+        --color-gray-60: rgb(170, 162, 157);
+        --color-gray-50: rgb(124, 113, 106);
+        --color-gray-10: rgb(39, 35, 33);
+        --color-gray-5: rgb(28, 25, 23);
+        --color-pop-50: rgb(37, 177, 177);
+        --color-pop-40: rgb(29, 138, 138);
+        --color-pop-60: rgb(100, 210, 210);
+        --color-bg-1: var(--color-gray-5);
+        --color-bg-2: rgb(20, 18, 17);
+        --color-text-1: var(--color-gray-95);
+        --color-text-2: var(--color-gray-60);
+        --color-text-3: var(--color-gray-50);
+        --color-border-2: rgb(70, 64, 60);
+        --color-border-3: rgb(82, 75, 70);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      body {
+        font-family: var(--font-sans);
+        background: var(--color-bg-1);
+        color: var(--color-text-1);
+        transition:
+          background-color 0.2s,
+          color 0.2s;
+      }
+
+      code {
+        font-family: var(--font-mono);
+      }
+
+      /* Custom Scrollbar */
+      .scrollbar::-webkit-scrollbar {
+        width: 14px;
+        background-color: transparent;
+      }
+      .scrollbar::-webkit-scrollbar-thumb {
+        border: 4px solid rgba(0, 0, 0, 0);
+        border-radius: 12px;
+        background-clip: padding-box;
+        background-color: var(--color-border-2);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <div class="flex flex-col min-h-screen">
+      <section class="px-6 py-20 md:py-24">
+        <div class="max-w-3xl mx-auto">
+          <div class="flex flex-col items-center text-center gap-6">
+            <div
+              class="w-20 h-20 flex items-center justify-center rounded-xl border"
+              style="
+                background: var(--color-bg-2);
+                border-color: var(--color-border-2);
+              "
+            >
+              <img
+                src="https://gitbutler.com/favicon/favicon.svg"
+                alt="GitButler Logo"
+                class="w-12 h-12"
+              />
+            </div>
+            <div class="flex flex-col gap-3">
+              <h1 class="text-4xl md:text-5xl font-bold leading-tight">
+                Install GitButler CLI<br />with One Command
+              </h1>
+              <p
+                class="text-lg md:text-xl max-w-2xl mx-auto"
+                style="color: var(--color-text-2)"
+              >
+                A secure, automated installer for the GitButler CLI on Linux.
+                Supports all major distributions and architectures.
+              </p>
+            </div>
+            <div
+              class="w-full max-w-2xl rounded-xl border p-6 mt-4"
+              style="
+                background: var(--color-bg-2);
+                border-color: var(--color-border-2);
+              "
+            >
+              <div class="flex flex-col gap-3">
+                <div class="flex items-center justify-between">
+                  <span
+                    class="text-xs font-semibold uppercase tracking-wide"
+                    style="color: var(--color-text-2)"
+                  >
+                    Quick Install</span
+                  >
+                  <button
+                    onclick="copyToClipboard()"
+                    class="px-3 py-1.5 text-xs font-semibold rounded-md text-white transition-colors"
+                    style="background: var(--color-pop-50)"
+                    onmouseover="this.style.background = 'var(--color-pop-40)'"
+                    onmouseout="this.style.background = 'var(--color-pop-50)'"
+                  >
+                    Copy
+                  </button>
+                </div>
+                <div
+                  class="rounded-lg border p-4 overflow-x-auto scrollbar"
+                  style="
+                    background: var(--color-bg-1);
+                    border-color: var(--color-border-2);
+                  "
+                >
+                  <code
+                    id="install-cmd"
+                    class="text-sm whitespace-nowrap"
+                    style="color: var(--color-text-1)"
+                  >
+                    curl -fsSL https://pyyupsk.github.io/gitbutler/install.sh |
+                    bash
+                  </code>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-3 flex-wrap justify-center mt-2">
+              <a
+                href="https://github.com/pyyupsk/gitbutler"
+                class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border-2 text-sm font-semibold no-underline transition-colors hover:border-pop-50"
+                style="
+                  background: var(--color-bg-2);
+                  border-color: var(--color-border-2);
+                  color: var(--color-text-1);
+                "
+              >
+                <span>📦</span>
+                <span>View on GitHub</span>
+              </a>
+              <a
+                href="https://github.com/pyyupsk/gitbutler#readme"
+                class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border-2 text-sm font-semibold no-underline transition-colors hover:border-pop-50"
+                style="
+                  background: var(--color-bg-2);
+                  border-color: var(--color-border-2);
+                  color: var(--color-text-1);
+                "
+              >
+                <span>📖</span>
+                <span>Documentation</span>
+              </a>
+              <a
+                href="https://gitbutler.com"
+                class="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-border-2 text-sm font-semibold no-underline transition-colors hover:border-pop-50"
+                style="
+                  background: var(--color-bg-2);
+                  border-color: var(--color-border-2);
+                  color: var(--color-text-1);
+                "
+              >
+                <span>🏠</span>
+                <span>Official Site</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="px-6 py-16" style="background: var(--color-bg-2)">
+        <div class="max-w-5xl mx-auto">
+          <div class="flex flex-col gap-8">
+            <div class="text-center flex flex-col gap-2">
+              <h2 class="text-2xl font-bold">Why Use This Installer?</h2>
+              <p class="text-base" style="color: var(--color-text-2)">
+                Built with security and simplicity in mind
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div
+                class="rounded-xl border p-6"
+                style="
+                  background: var(--color-bg-1);
+                  border-color: var(--color-border-2);
+                "
+              >
+                <div class="flex flex-col gap-3">
+                  <div
+                    class="w-12 h-12 flex items-center justify-center rounded-lg text-2xl"
+                    style="background: var(--color-bg-2)"
+                  >
+                    🚀
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <h3 class="font-semibold">Always Up-to-Date</h3>
+                    <p
+                      class="text-sm leading-relaxed"
+                      style="color: var(--color-text-2)"
+                    >
+                      Automatically fetches and installs the latest stable
+                      release from GitButler's official releases.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="rounded-xl border p-6"
+                style="
+                  background: var(--color-bg-1);
+                  border-color: var(--color-border-2);
+                "
+              >
+                <div class="flex flex-col gap-3">
+                  <div
+                    class="w-12 h-12 flex items-center justify-center rounded-lg text-2xl"
+                    style="background: var(--color-bg-2)"
+                  >
+                    🔐
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <h3 class="font-semibold">Secure by Default</h3>
+                    <p
+                      class="text-sm leading-relaxed"
+                      style="color: var(--color-text-2)"
+                    >
+                      Downloads are validated and verified from trusted sources.
+                      No suspicious scripts or executables.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="rounded-xl border p-6"
+                style="
+                  background: var(--color-bg-1);
+                  border-color: var(--color-border-2);
+                "
+              >
+                <div class="flex flex-col gap-3">
+                  <div
+                    class="w-12 h-12 flex items-center justify-center rounded-lg text-2xl"
+                    style="background: var(--color-bg-2)"
+                  >
+                    🎯
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <h3 class="font-semibold">Multi-Architecture</h3>
+                    <p
+                      class="text-sm leading-relaxed"
+                      style="color: var(--color-text-2)"
+                    >
+                      Works seamlessly on both x86_64 and aarch64 systems with
+                      automatic detection.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="rounded-xl border p-6"
+                style="
+                  background: var(--color-bg-1);
+                  border-color: var(--color-border-2);
+                "
+              >
+                <div class="flex flex-col gap-3">
+                  <div
+                    class="w-12 h-12 flex items-center justify-center rounded-lg text-2xl"
+                    style="background: var(--color-bg-2)"
+                  >
+                    🧹
+                  </div>
+                  <div class="flex flex-col gap-1.5">
+                    <h3 class="font-semibold">Easy Management</h3>
+                    <p
+                      class="text-sm leading-relaxed"
+                      style="color: var(--color-text-2)"
+                    >
+                      Simple uninstall with
+                      <code
+                        class="text-xs px-1 py-0.5 rounded"
+                        style="background: var(--color-bg-2)"
+                        >--uninstall</code
+                      >
+                      flag. Clean removal of all files.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="px-6 py-16">
+        <div class="max-w-3xl mx-auto">
+          <div class="flex flex-col gap-8">
+            <div class="text-center flex flex-col gap-2">
+              <h2 class="text-2xl font-bold">Advanced Options</h2>
+              <p class="text-base" style="color: var(--color-text-2)">
+                Additional flags for power users
+              </p>
+            </div>
+
+            <div class="flex flex-col gap-4">
+              <div
+                class="rounded-xl border p-5"
+                style="
+                  background: var(--color-bg-2);
+                  border-color: var(--color-border-2);
+                "
+              >
+                <div class="flex flex-col gap-3">
+                  <div class="flex items-center gap-3">
+                    <code
+                      class="px-2 py-1 text-sm rounded-md"
+                      style="background: var(--color-bg-1)"
+                    >
+                      --force
+                    </code>
+                    <span class="text-sm" style="color: var(--color-text-2)">
+                      Skip confirmation prompts
+                    </span>
+                  </div>
+                  <div
+                    class="rounded-lg border p-3 overflow-x-auto scrollbar"
+                    style="
+                      background: var(--color-bg-1);
+                      border-color: var(--color-border-2);
+                    "
+                  >
+                    <code
+                      class="text-xs md:text-sm whitespace-nowrap"
+                      style="color: var(--color-text-2)"
+                    >
+                      curl -fsSL https://pyyupsk.github.io/gitbutler/install.sh
+                      | bash -s -- --force
+                    </code>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="rounded-xl border p-5"
+                style="
+                  background: var(--color-bg-2);
+                  border-color: var(--color-border-2);
+                "
+              >
+                <div class="flex flex-col gap-3">
+                  <div class="flex items-center gap-3">
+                    <code
+                      class="px-2 py-1 text-sm rounded-md"
+                      style="background: var(--color-bg-1)"
+                    >
+                      --quiet
+                    </code>
+                    <span class="text-sm" style="color: var(--color-text-2)">
+                      Minimal output during installation
+                    </span>
+                  </div>
+                  <div
+                    class="rounded-lg border p-3 overflow-x-auto scrollbar"
+                    style="
+                      background: var(--color-bg-1);
+                      border-color: var(--color-border-2);
+                    "
+                  >
+                    <code
+                      class="text-xs md:text-sm whitespace-nowrap"
+                      style="color: var(--color-text-2)"
+                    >
+                      curl -fsSL https://pyyupsk.github.io/gitbutler/install.sh
+                      | bash -s -- --quiet
+                    </code>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="rounded-xl border p-5"
+                style="
+                  background: var(--color-bg-2);
+                  border-color: var(--color-border-2);
+                "
+              >
+                <div class="flex flex-col gap-3">
+                  <div class="flex items-center gap-3">
+                    <code
+                      class="px-2 py-1 text-sm rounded-md"
+                      style="background: var(--color-bg-1)"
+                    >
+                      --uninstall
+                    </code>
+                    <span class="text-sm" style="color: var(--color-text-2)">
+                      Remove GitButler CLI completely
+                    </span>
+                  </div>
+                  <div
+                    class="rounded-lg border p-3 overflow-x-auto scrollbar"
+                    style="
+                      background: var(--color-bg-1);
+                      border-color: var(--color-border-2);
+                    "
+                  >
+                    <code
+                      class="text-xs md:text-sm whitespace-nowrap"
+                      style="color: var(--color-text-2)"
+                    >
+                      curl -fsSL https://pyyupsk.github.io/gitbutler/install.sh
+                      | bash -s -- --uninstall
+                    </code>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer
+        class="mt-auto px-6 py-8 text-center border-t"
+        style="
+          background: var(--color-bg-2);
+          border-color: var(--color-border-3);
+        "
+      >
+        <div class="flex flex-col gap-4">
+          <div class="flex gap-2 items-center justify-center flex-wrap">
+            <span class="text-sm" style="color: var(--color-text-2)">
+              Made with ❤️ by
+            </span>
+            <a
+              href="https://github.com/pyyupsk"
+              class="text-sm font-semibold no-underline transition-opacity hover:opacity-80"
+              style="color: var(--color-pop-50)"
+            >
+              @pyyupsk
+            </a>
+          </div>
+          <p class="text-xs" style="color: var(--color-text-3)">
+            Unofficial installer for GitButler CLI • Not affiliated with
+            GitButler Inc.
+          </p>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      function copyToClipboard() {
+        const text = document.getElementById("install-cmd").textContent.trim();
+        const btn = event.target;
+        const originalText = btn.textContent;
+
+        navigator.clipboard.writeText(text).then(() => {
+          btn.textContent = "Copied!";
+          setTimeout(() => {
+            btn.textContent = originalText;
+          }, 2000);
+        });
+      }
+    </script>
+  </body>
+</html>
