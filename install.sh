@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 #
-# The installer for the latest stable release of GitButler on Linux.
+# The installer for the latest stable release of GitButler CLI on Linux.
 #
-# This script automatically detects the environment (distribution, architecture)
-# to download and install the appropriate package (DEB, RPM, or AppImage).
-# It handles new installations and upgrades, is idempotent, and prioritizes
-# security and robustness.
+# This script automatically detects the environment (architecture) to download
+# and install the appropriate CLI binary. It handles new installations and
+# upgrades, is idempotent, and prioritizes security and robustness.
 #
 # Usage: curl -fsSL <url> | bash
 #
@@ -15,13 +14,13 @@ set -euo pipefail
 # --- Configuration & Globals ---
 API_URL="https://app.gitbutler.com/api/downloads?limit=1&channel=release"
 ALLOWED_DOMAIN="https://releases.gitbutler.com"
+INSTALL_DIR="/usr/local/bin"
 TMP_DIR=""
 OS=""
 ARCH_NAME=""
-PKG_TYPE=""
 LATEST_VERSION=""
 DOWNLOAD_URL=""
-FILENAME=""
+FILENAME="but"
 DOWNLOAD_PATH=""
 
 # --- Terminal Colors ---
@@ -51,7 +50,7 @@ trap cleanup EXIT
 check_dependencies() {
     info "Checking for required tools..."
     local missing_deps=0
-    for cmd in curl jq sha256sum sudo tar; do
+    for cmd in curl jq sudo; do
         if ! command -v "$cmd" &>/dev/null; then
             echo -e "${RED}- Missing required command: $cmd${NC}" >&2
             missing_deps=1
@@ -74,26 +73,11 @@ detect_environment() {
         *) error "Unsupported architecture: $ARCH. Only x86_64 and aarch64 are supported." ;;
     esac
 
-    # Default to AppImage, then try to detect a native package manager
-    PKG_TYPE="appimage"
-    if [ -f /etc/os-release ]; then
-        # shellcheck source=/dev/null
-        source /etc/os-release
-        if [[ "${ID_LIKE:-}" == *"debian"* || "${ID:-}" == "debian" || "${ID:-}" == "ubuntu" ]]; then
-            PKG_TYPE="deb"
-        elif [[ "${ID_LIKE:-}" == *"fedora"* || "${ID:-}" == "fedora" || "${ID:-}" == "rhel" || "${ID:-}" == "centos" || "${ID:-}" == "rocky" || "${ID:-}" == "almalinux" ]]; then
-            PKG_TYPE="rpm"
-        elif [[ "${ID:-}" == "arch" ]]; then
-            warn "Arch Linux detected; will use AppImage as a fallback."
-        fi
-    else
-        warn "Could not detect distribution from /etc/os-release. Falling back to AppImage."
-    fi
-    info "System: $PKG_TYPE on $ARCH_NAME"
+    info "System: Linux $ARCH_NAME"
 }
 
 fetch_release_info() {
-    info "Fetching latest release information..."
+    info "Fetching latest CLI release information..."
     local JSON_DATA
     JSON_DATA=$(curl -fsSL "$API_URL")
     [ -n "$JSON_DATA" ] || error "Failed to fetch release data from the API."
@@ -106,28 +90,12 @@ fetch_release_info() {
     [ -n "$LATEST_VERSION" ] && [ "$LATEST_VERSION" != "null" ] || error "Could not parse version from API response."
 
     local BUILD_INFO
-    # Prioritize native packages (deb/rpm)
-    BUILD_INFO=$(echo "$RELEASE_DATA" | jq -r --arg arch "$ARCH_NAME" --arg pkg_type ".$PKG_TYPE" '.builds[] | select(.arch == $arch and (.file | endswith($pkg_type)))')
-
-            # Fallback to AppImage if no native package is found for the detected distro
-            if [ -z "$BUILD_INFO" ]; then
-                info "No native package found for your distro, falling back to AppImage."
-                PKG_TYPE="appimage"
-                # First try to find a direct .AppImage
-                BUILD_INFO=$(echo "$RELEASE_DATA" | jq -r --arg arch "$ARCH_NAME" '.builds[] | select(.arch == $arch and (.file | endswith(".AppImage")))')
-    
-                if [ -z "$BUILD_INFO" ]; then
-                    # If no direct .AppImage, try to find a .AppImage.tar.gz
-                    info "No direct AppImage found, looking for AppImage.tar.gz."
-                    BUILD_INFO=$(echo "$RELEASE_DATA" | jq -r --arg arch "$ARCH_NAME" '.builds[] | select(.arch == $arch and (.file | endswith(".AppImage.tar.gz")))')
-                fi
-            fi
-    [ -n "$BUILD_INFO" ] || error "No compatible build found for architecture '$ARCH_NAME'."
+    # Fetch the CLI binary (file == "but")
+    BUILD_INFO=$(echo "$RELEASE_DATA" | jq -r --arg arch "$ARCH_NAME" '.builds[] | select(.arch == $arch and .file == "but")')
+    [ -n "$BUILD_INFO" ] || error "No CLI binary found for architecture '$ARCH_NAME'."
 
     DOWNLOAD_URL=$(echo "$BUILD_INFO" | jq -r '.url')
-    FILENAME=$(echo "$BUILD_INFO" | jq -r '.file')
-
-    [ -n "$DOWNLOAD_URL" ] && [ "$DOWNLOAD_URL" != "null" ] || error "Could not find a downloadable build for your system."
+    [ -n "$DOWNLOAD_URL" ] && [ "$DOWNLOAD_URL" != "null" ] || error "Could not find downloadable CLI binary for your system."
 
     # Security: Validate that the download URL is on the allowed domain
     if [[ ! "$DOWNLOAD_URL" =~ ^$ALLOWED_DOMAIN/ ]]; then
@@ -136,70 +104,45 @@ fetch_release_info() {
 }
 
 get_installed_version() {
-    if command -v gitbutler &>/dev/null; then
-        # Example output: "GitButler version 2.2.19" or "git-butler-cli 2.2.19"
-        gitbutler --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "0.0.0"
+    if command -v but &>/dev/null; then
+        # Example output: "but 0.19.1"
+        but --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || echo "0.0.0"
     else
         echo "0.0.0"
     fi
 }
 
 download_and_verify() {
-    info "Preparing to download version $LATEST_VERSION..."
+    info "Preparing to download CLI version $LATEST_VERSION..."
     TMP_DIR=$(mktemp -d)
     DOWNLOAD_PATH="$TMP_DIR/$FILENAME"
 
     info "Downloading from $DOWNLOAD_URL"
     curl --fail --show-error -# -L -o "$DOWNLOAD_PATH" "$DOWNLOAD_URL" || error "Download failed."
 
-    # Handle .tar.gz archives for AppImages
-    if [[ "$DOWNLOAD_PATH" == *.AppImage.tar.gz ]]; then
-        info "Decompressing AppImage archive..."
-        tar -xzf "$DOWNLOAD_PATH" -C "$TMP_DIR" || error "Failed to decompress AppImage archive."
-        # The actual AppImage file should now be in $TMP_DIR
-        local extracted_appimage
-        # Search for .AppImage in the temp directory, allowing for one level of subdirectory
-        extracted_appimage=$(find "$TMP_DIR" -maxdepth 2 -type f -name "*.AppImage" | head -n 1)
-        [ -n "$extracted_appimage" ] || error "Could not find .AppImage file after extraction."
-        DOWNLOAD_PATH="$extracted_appimage" # Update DOWNLOAD_PATH to point to the extracted AppImage
-        FILENAME=$(basename "$DOWNLOAD_PATH") # Update FILENAME to reflect the extracted file
-    fi
+    # Verify the downloaded file is not empty
+    [ -s "$DOWNLOAD_PATH" ] || error "Downloaded file is empty."
 
     # SECURITY WARNING: The GitButler API does not provide a per-build checksum.
     # The script cannot verify the integrity of the downloaded file. This is a
     # significant security risk that originates from the asset provider.
-    warn "Checksum verification is not possible as the provider does not supply checksums for Linux builds."
+    warn "Checksum verification is not possible as the provider does not supply checksums."
     warn "Skipping integrity check."
 }
 
 install_package() {
-    info "Installing GitButler..."
+    info "Installing GitButler CLI..."
     info "Root privileges are required. You may be prompted for your password."
 
-    case "$PKG_TYPE" in
-        deb)
-            sudo dpkg -i "$DOWNLOAD_PATH" || error "dpkg installation failed."
-            ;;
-        rpm)
-            sudo rpm -Uvh "$DOWNLOAD_PATH" || error "rpm installation failed."
-            ;;
-        appimage)
-            local APP_INSTALL_DIR="/opt/gitbutler"
-            local BIN_DIR="/usr/local/bin"
-            local APPIMAGE_NAME="GitButler-${LATEST_VERSION}-${ARCH_NAME}.AppImage"
-            local APPIMAGE_PATH="$APP_INSTALL_DIR/$APPIMAGE_NAME"
-            local SYMLINK_PATH="$BIN_DIR/gitbutler"
+    local INSTALL_PATH="$INSTALL_DIR/$FILENAME"
 
-            info "Installing AppImage to $APP_INSTALL_DIR and symlinking to $SYMLINK_PATH..."
-            sudo chmod +x "$DOWNLOAD_PATH"
-            sudo mkdir -p "$APP_INSTALL_DIR"
-            sudo mv "$DOWNLOAD_PATH" "$APPIMAGE_PATH"
-            sudo ln -sf "$APPIMAGE_PATH" "$SYMLINK_PATH"
-            ;;
-        *)
-            error "Internal error: Unknown package type '$PKG_TYPE'."
-            ;;
-    esac
+    # Make the binary executable
+    chmod +x "$DOWNLOAD_PATH" || error "Failed to make binary executable."
+
+    # Install the binary to /usr/local/bin
+    sudo mv "$DOWNLOAD_PATH" "$INSTALL_PATH" || error "Failed to install binary to $INSTALL_PATH."
+
+    info "GitButler CLI installed to $INSTALL_PATH"
 }
 
 # --- Main Execution ---
@@ -216,14 +159,14 @@ main() {
 ' "$LATEST_VERSION" "$INSTALLED_VERSION" | sort -V | tail -n1)
 
     if [ "$INSTALLED_VERSION" == "$LATEST_VERSION" ] || [ "$INSTALLED_VERSION" == "$HIGHEST_VERSION" ]; then
-        info "GitButler is already up to date (Version: $INSTALLED_VERSION)."
+        info "GitButler CLI is already up to date (Version: $INSTALLED_VERSION)."
         exit 0
     fi
 
     if [ "$INSTALLED_VERSION" != "0.0.0" ]; then
         info "Found installed version $INSTALLED_VERSION. Upgrading to $LATEST_VERSION."
     else
-        info "GitButler not found. Installing version $LATEST_VERSION."
+        info "GitButler CLI not found. Installing version $LATEST_VERSION."
     fi
 
     download_and_verify
@@ -233,28 +176,25 @@ main() {
     local FINAL_VERSION
     local INSTALL_PATH
     FINAL_VERSION=$(get_installed_version)
-    INSTALL_PATH=$(command -v gitbutler)
+    INSTALL_PATH=$(command -v but)
 
     if [ "$INSTALL_PATH" ]; then
-        info "✅ Successfully installed GitButler version $FINAL_VERSION"
+        info "✅ Successfully installed GitButler CLI version $FINAL_VERSION"
         info "   Path: $INSTALL_PATH"
         echo ""
-        info "To enable shell completions and alias, add the following to your shell configuration:"
+        info "To enable shell completions, add the following to your shell configuration:"
         info "  Zsh:"
-        info "    echo 'alias but=\"gitbutler\"' >> ~/.zshrc"
-        info "    echo 'eval \"\$(gitbutler completions zsh)\"' >> ~/.zshrc"
+        info "    echo 'eval \"\$(but completions zsh)\"' >> ~/.zshrc"
         info ""
         info "  Bash:"
-        info "    echo 'alias but=\"gitbutler\"' >> ~/.bashrc"
-        info "    echo 'eval \"\$(gitbutler completions bash)\"' >> ~/.bashrc"
+        info "    echo 'eval \"\$(but completions bash)\"' >> ~/.bashrc"
         info ""
         info "  Fish:"
-        info "    echo 'alias but=\"gitbutler\"' >> ~/.config/fish/config.fish"
-        info "    echo 'gitbutler completions fish | source' >> ~/.config/fish/config.fish"
+        info "    echo 'but completions fish | source' >> ~/.config/fish/config.fish"
         echo ""
         info "Then restart your shell or source the configuration file."
     else
-        error "Installation finished, but the 'gitbutler' command could not be found in the system's PATH."
+        error "Installation finished, but the 'but' command could not be found in the system's PATH."
     fi
 }
 
